@@ -160,6 +160,7 @@ st.markdown(
       and beating top opponents—so that every wrestler in a given weight class ends up with a single number. Sorting those numbers from
       highest to lowest gives you the ranked list. In plain terms: “Beat strong opponents in important events, pin them early,
       and keep winning lately, and you’ll sit at the top of your weight.”<br><br>
+      The following rankings are as of 2/18/25 for Iowa HS (before the state tournamnet).<br><br>
       Use the filters below to narrow by
       <span style='font-weight:600;'>Classification (League)</span>,
       <span style='font-weight:600;'>Metro</span>, or

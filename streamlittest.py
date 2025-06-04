@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # Inject a bit of CSS to mimic FlowWrestling’s font + color scheme
-# (Feel free to tweak the font-family or colors if you have a more
+# (Feel free to tweak the font‐family or colors if you have a more
 #  specific .css file from Flow; this is a close approximation.)
 _FLOW_CSS = """
 <style>
@@ -48,7 +48,7 @@ h1 {
     padding: 0.5rem 0.75rem !important;
 }
 [data-testid="stSelectbox"] .css-1wrcr25:focus-within {
-    border: 1px solid #E63946 !important;  /* highlight in a Flow-style red when focused */
+    border: 1px solid #E63946 !important;  /* highlight in a Flow‐style red when focused */
     box-shadow: none !important;
 }
 
@@ -91,7 +91,6 @@ h1 {
 st.markdown(_FLOW_CSS, unsafe_allow_html=True)
 
 
-
 # -------------------------------------------------------
 # 2) LOAD & PREPARE DATA
 # -------------------------------------------------------
@@ -99,29 +98,38 @@ st.markdown(_FLOW_CSS, unsafe_allow_html=True)
 def load_data(path: str) -> pd.DataFrame:
     """
     Loads the wrestling CSV and does initial cleanup:
-    - Ensures all column names are “safe” (no leading/trailing spaces).
-    - Strips off any suffix after a comma in the Classification column (e.g. "Class 1A, Zinc County" → "Class 1A").
+    - Strips whitespace from column names.
+    - Creates a new "Classification" column based on the existing "leagues" column.
+      If "leagues" contains things like "Class 1A, Zinc County", we split off at the comma
+      so we just get "Class 1A".
     """
     df = pd.read_csv(path)
 
-    # Standardize column names (strip whitespace)
+    # 2.1) Standardize column names (strip whitespace)
     df.columns = [c.strip() for c in df.columns]
 
-    # If there's a "Classification" column named something else, adjust here.
-    # We assume the columns include at least: 
-    #   "Classification" (or rename as needed), 
-    #   "Metro", "grade", "weight", 
-    #   "wrestler_name", "team_name", 
-    #   "Wins", "Losses", "Win_Pct", "Pins", "Tech_Falls", "Major_Decisions".
+    # 2.2) Create a unified "Classification" column from the existing "leagues" column
+    if "leagues" in df.columns:
+        # Convert to string just in case, then split off any comma‐suffix
+        df["Classification"] = (
+            df["leagues"]
+            .astype(str)
+            .apply(lambda x: x.split(",")[0].strip())
+        )
+    else:
+        # If your CSV truly has no "leagues" column, we leave Classification blank,
+        # so downstream code will still run—just the dropdown will show "(All)" only.
+        df["Classification"] = ""
 
-    # 1) Clean "Classification" so that "Class 1A, Zinc County" → "Class 1A"
-    if "Classification" in df.columns:
-        df["Classification"] = df["Classification"].astype(str).apply(lambda x: x.split(",")[0].strip())
+    # 2.3) (Optional) If you want, you can drop the original "leagues" column now,
+    #        so it doesn’t clutter the table later on.
+    #        Feel free to comment out the next line if you prefer to keep "leagues".
+    df = df.drop(columns=["leagues"], errors="ignore")
 
     return df
 
 
-# Make sure to point this at your actual CSV file
+# Make sure to point this at your actual CSV file in the same folder
 DATA_PATH = "IA_quality_rankings_v5.csv"
 try:
     df_all = load_data(DATA_PATH)
@@ -134,7 +142,6 @@ except FileNotFoundError:
         """
     )
     st.stop()
-
 
 
 # -------------------------------------------------------
@@ -154,21 +161,21 @@ st.markdown(
 
 # --- Build lists for each filter --- #
 
-# 3a) Classification (League)
+# 3a) Classification (League) dropdown
 if "Classification" in df_all.columns:
-    all_leagues = ["(All)"] + sorted(
-        df_all["Classification"].dropna().unique().tolist()
-    )
+    unique_leagues = sorted(df_all["Classification"].dropna().unique().tolist())
+    all_leagues = ["(All)"] + unique_leagues
 else:
     all_leagues = ["(All)"]
 
-# 3b) Metro
+# 3b) Metro dropdown
 if "Metro" in df_all.columns:
-    all_metros = ["(All)"] + sorted(df_all["Metro"].dropna().unique().tolist())
+    unique_metros = sorted(df_all["Metro"].dropna().unique().tolist())
+    all_metros = ["(All)"] + unique_metros
 else:
     all_metros = ["(All)"]
 
-# 3c) Grade (ensure we show 9,10,11,12 in that order)
+# 3c) Grade dropdown (show only 9–12 in numeric order, no “.0”)
 if "grade" in df_all.columns:
     grade_vals = sorted(df_all["grade"].dropna().unique().astype(int).tolist())
     # Only keep 9,10,11,12 if present
@@ -179,7 +186,6 @@ else:
 
 # --- Place the three selectboxes side by side --- #
 col1, col2, col3 = st.columns([3, 3, 2], gap="large")
-
 with col1:
     selected_league = st.selectbox(
         label="Classification (League)",
@@ -205,7 +211,6 @@ with col3:
 st.markdown("---")  # horizontal divider
 
 
-
 # -------------------------------------------------------
 # 4) APPLY FILTERS
 # -------------------------------------------------------
@@ -221,21 +226,16 @@ if selected_metro != "(All)" and "Metro" in dff.columns:
 
 # 4c) Filter by Grade (if not “(All)”)
 if selected_grade != "(All)" and "grade" in dff.columns:
-    # stored as string in selectbox, convert to int
     try:
         grade_int = int(selected_grade)
         dff = dff[dff["grade"] == grade_int]
-    except:
+    except ValueError:
         pass
-
-# Now “dff” is our fully filtered DataFrame; next we’ll break it out by weight.
-
 
 
 # -------------------------------------------------------
 # 5) LOOP OVER WEIGHT CLASSES & DISPLAY TABLES
 # -------------------------------------------------------
-# We assume there is a “weight” column in dff (e.g. 106, 113, 120, etc.)
 if "weight" not in dff.columns:
     st.error("❗️ Your data must include a column named “weight” (the weight class).")
     st.stop()
@@ -248,14 +248,13 @@ for w in all_weights:
         continue
 
     # ──────────────────────────────────────────────────────────────────
-    # A) Re‐compute a DYNAMIC RANK (1,2,3,...) on the filtered subset
+    # A) Re‐compute a DYNAMIC RANK (1,2,3,…) on the filtered subset
     # ──────────────────────────────────────────────────────────────────
-    # Sort by the original “rank” ascending. If you instead want to
-    # sort by Win_Pct descending, change ascending=False below.
     if "rank" in df_w.columns:
+        # Sort by the original “rank” ascending
         df_w = df_w.sort_values(by="rank", ascending=True).reset_index(drop=True)
     else:
-        # If no original “rank” column, we’ll just sort by Win_Pct DESC
+        # If no original “rank” column, sort by Win_Pct descending
         df_w = df_w.sort_values(by="Win_Pct", ascending=False).reset_index(drop=True)
 
     # Now assign dynamic_rank = 1..N
@@ -273,26 +272,23 @@ for w in all_weights:
         df_display = df_w.copy()
 
         # 5.2) Drop columns we do NOT want to show
-        drop_cols = []
-        for c in [
+        drop_cols = [
             "Classification",
             "Metro",
-            "leagues",         # if you happen to have a “leagues” column
-            "rank",            # drop the original static rank
-            "Win_Pct",         # we’ll re‐format it as a percentage string
-        ]:
-            if c in df_display.columns:
-                drop_cols.append(c)
+            "rank",       # original static rank
+            "Win_Pct",    # we’ll re‐format this as a percentage string
+        ]
         df_display = df_display.drop(columns=drop_cols, errors="ignore")
 
         # 5.3) Reorder & calculate new columns
+
         # ----- Win % as a formatted string ----- #
         if "Win_Pct" in df_w.columns:
             df_display["Win %"] = df_w["Win_Pct"].apply(
                 lambda x: f"{x * 100:.1f}%" if pd.notnull(x) else "—"
             )
         else:
-            # If you only have “Wins” & “Losses,” you could compute Win_Pct on the fly:
+            # If you only have “Wins” & “Losses,” compute Win_Pct on the fly
             def _calc_win_pct(r):
                 total = r["Wins"] + r["Losses"]
                 if total == 0:
@@ -311,7 +307,6 @@ for w in all_weights:
         df_display["Bonus Pt %"] = df_w.apply(calc_bonus_pct, axis=1)
 
         # 5.4) Decide on final column order:
-        #   dynamic_rank → Wrestler Name → Team Name → grade → Wins → Losses → Win % → Bonus Pt % → Pins → Tech Falls → Major Decisions
         desired_order = [
             "dynamic_rank",
             "wrestler_name",
@@ -325,7 +320,6 @@ for w in all_weights:
             "Tech_Falls",
             "Major_Decisions",
         ]
-        # Keep only those columns that exist in df_display
         cols_to_show = [c for c in desired_order if c in df_display.columns]
         df_display = df_display[cols_to_show]
 
@@ -346,7 +340,7 @@ for w in all_weights:
             }
         )
 
-        # 5.6) Convert grade to an integer in case it was float (e.g. 10.0 → 10)
+        # 5.6) Convert Grade to an integer (drop any “.0”)
         if "Grade" in df_display.columns:
             df_display["Grade"] = df_display["Grade"].astype(int)
 
@@ -357,9 +351,8 @@ for w in all_weights:
         st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 
-
 # -------------------------------------------------------
-# 6) FOOTER / DEPLOY LINK (OPTIONAL)
+# 6) OPTIONAL FOOTER / DEPLOY LINK
 # -------------------------------------------------------
 # If you plan to deploy this to Streamlit Cloud, you can show a “Deploy” badge:
 st.markdown(

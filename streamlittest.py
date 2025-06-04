@@ -8,7 +8,7 @@ import numpy as np
 # 1) PAGE CONFIG & GLOBAL CSS
 # -------------------------------------------------------
 st.set_page_config(
-    page_title="Missouri Wrestling Leaderboard",
+    page_title="Iowa Wrestling Leaderboard",
     layout="wide",
 )
 
@@ -23,7 +23,7 @@ html, body, [class*="css"]  {
     color: #2A2A2A !important;
 }
 
-/* Style the main header (trophy + “Missouri Wrestling Leaderboard”) */
+/* Style the main header (trophy + “Iowa Wrestling Leaderboard”) */
 h1 {
     font-size: 2.5rem !important;
     font-weight: 700 !important;

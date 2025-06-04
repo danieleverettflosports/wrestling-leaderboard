@@ -128,7 +128,7 @@ def load_data(path: str) -> pd.DataFrame:
 
 
 # Make sure to point this at your actual CSV file in the same folder
-DATA_PATH = "MO_quality_rankings_v6.csv"
+DATA_PATH = "MO_quality_rankings_v7.csv"
 try:
     df_all = load_data(DATA_PATH)
 except FileNotFoundError:

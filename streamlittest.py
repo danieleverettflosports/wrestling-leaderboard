@@ -150,6 +150,9 @@ except FileNotFoundError:
 st.markdown("## 🏆 Iowa Wrestling Leaderboard")
 st.markdown(
     '<div class="subheader">'
+    "We take every varsity match you wrestle and turn it into a single “performance score” that reflects not just wins and losses, but how strongly and how recently you won those matches. Beating a highly rated opponent (who themselves has beaten other top guys) counts more than beating someone unranked, and a pin or tech-fall earns more credit than a narrow decision. Wins in big tournaments (like regionals or state) matter more than wins in smaller duals, and we gradually reduce the value of older matches so that recent form carries the most weight.
+
+Once each match has been scored this way, we average those match scores—giving extra weight to quick pins, state-bracket finishes, and beating top opponents—so that every wrestler in a given weight class ends up with a single number. Sorting those numbers from highest to lowest gives you the ranked list. In plain terms: “Beat strong opponents in important events, pin them early, and keep winning lately, and you’ll sit at the top of your weight.”"
     "Use the filters below to narrow by "
     "<span style='font-weight:600;'>Classification (League)</span>, "
     "<span style='font-weight:600;'>Metro</span>, or "

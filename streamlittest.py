@@ -275,7 +275,7 @@ for w in all_weights:
     top_row = df_w[df_w["dynamic_rank"] == 1].iloc[0]
     top_name = top_row["wrestler_name"]
     top_team = top_row["team_name"]
-    expander_label = f"🏳️ {w} | {top_name} ({top_team})"
+    expander_label = f"{w} | {top_name} ({top_team})"
     # ──────────────────────────────────────────────────────────────────
 
     with st.expander(expander_label, expanded=False):

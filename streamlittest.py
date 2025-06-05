@@ -1,8 +1,7 @@
-# streamlittest.py
+# streamlit_app.py
 
 import streamlit as st
 import pandas as pd
-import numpy as np
 
 # -------------------------------------------------------
 # 1) PAGE CONFIG & GLOBAL CSS
@@ -13,11 +12,10 @@ st.set_page_config(
 )
 
 # Inject a bit of CSS to mimic FlowWrestling’s font + color scheme
-# (Feel free to tweak the font‐family or colors if you have a more
-#  specific .css file from Flow; this is a close approximation.)
+# (Close approximation of Flow’s “headline-3” look.)
 _FLOW_CSS = """
 <style>
-/* Use a clean sans‐serif almost identical to Flow’s “headline-3” look */
+/* Use a clean sans-serif almost identical to Flow’s “headline-3” look */
 html, body, [class*="css"]  {
     font-family: 'Inter', sans-serif !important;
     color: #2A2A2A !important;
@@ -48,30 +46,8 @@ h1 {
     padding: 0.5rem 0.75rem !important;
 }
 [data-testid="stSelectbox"] .css-1wrcr25:focus-within {
-    border: 1px solid #E63946 !important;  /* highlight in a Flow‐style red when focused */
+    border: 1px solid #E63946 !important;  /* highlight in a Flow-style red when focused */
     box-shadow: none !important;
-}
-
-/* Style the expander header */
-.stExpander > button {
-    background-color: #FFFFFF !important;
-    border: 1px solid #E0E0E0 !important;
-    border-radius: 0.5rem !important;
-    padding: 0.75rem 1rem !important;
-    font-weight: 500 !important;
-    color: #2A2A2A !important;
-}
-.stExpander > button:hover {
-    background-color: #F8F9FA !important;
-}
-
-/* Style the expanded container background */
-.stExpander[aria-expanded="true"] {
-    background-color: #FAFAFA !important;
-    border: 1px solid #E0E0E0 !important;
-    border-top: none !important;
-    border-bottom-left-radius: 0.5rem !important;
-    border-bottom-right-radius: 0.5rem !important;
 }
 
 /* Style the DataFrame column headers */
@@ -99,9 +75,7 @@ def load_data(path: str) -> pd.DataFrame:
     """
     Loads the wrestling CSV and does initial cleanup:
     - Strips whitespace from column names.
-    - Creates a new "Classification" column based on the existing "leagues" column.
-      If "leagues" contains things like "Class 1A, Zinc County", we split off at the comma
-      so we just get "Class 1A".
+    - Creates a new "Classification" column from "leagues" (e.g. "Class 1A, Zinc County" → "Class 1A").
     """
     df = pd.read_csv(path)
 
@@ -110,33 +84,29 @@ def load_data(path: str) -> pd.DataFrame:
 
     # 2.2) Create a unified "Classification" column from the existing "leagues" column
     if "leagues" in df.columns:
-        # Convert to string just in case, then split off any comma‐suffix
         df["Classification"] = (
-            df["leagues"]
-            .astype(str)
-            .apply(lambda x: x.split(",")[0].strip())
+            df["leagues"].astype(str).apply(lambda x: x.split(",")[0].strip())
         )
     else:
-        # If your CSV truly has no "leagues" column, we leave Classification blank,
-        # so downstream code will still run—just the dropdown will show "(All)" only.
+        # If there's no "leagues" column, create an empty Classification
         df["Classification"] = ""
 
-    # 2.3) Drop the original "leagues" column so it doesn’t clutter the table later on
+    # 2.3) We can drop "leagues" entirely so it doesn’t clutter the table later
     df = df.drop(columns=["leagues"], errors="ignore")
 
     return df
 
 
-# Make sure to point this at your actual CSV file in the same folder
-DATA_PATH = "IA_quality_rankings_v5.csv"
+# Make sure this CSV is in the same folder
+DATA_PATH = "IA_quality_rankings_v7.csv"
 try:
     df_all = load_data(DATA_PATH)
 except FileNotFoundError:
     st.error(
         f"""
         ❗️ Could not find “{DATA_PATH}” in the same directory as this script.
-        Please make sure you have a CSV named `{DATA_PATH}` (or change DATA_PATH
-        to point to your actual file), then re‐run.
+        Please make sure you have a CSV named `{DATA_PATH}` (or change DATA_PATH to point to your actual file), 
+        then re‐run.
         """
     )
     st.stop()
@@ -146,27 +116,14 @@ except FileNotFoundError:
 # 3) PAGE HEADER + FILTERS
 # -------------------------------------------------------
 st.markdown("## 🏆 Iowa Wrestling Leaderboard")
-
-# Combine the long description into a single triple-quoted string (no accidental concatenation gaps)
 st.markdown(
-    """
-    <div class="subheader">
-      We take every varsity match you wrestle and turn it into a single “performance score” that reflects not just wins and losses,
-      but how strongly and how recently you won those matches. Beating a highly rated opponent (who themselves has beaten other top guys)
-      counts more than beating someone unranked, and a pin or tech-fall earns more credit than a narrow decision. Wins in big tournaments
-      (like regionals or state) matter more than wins in smaller duals, and we gradually reduce the value of older matches so that recent
-      form carries the most weight.<br><br>
-      Once each match has been scored this way, we average those match scores—giving extra weight to quick pins, state-bracket finishes,
-      and beating top opponents—so that every wrestler in a given weight class ends up with a single number. Sorting those numbers from
-      highest to lowest gives you the ranked list. In plain terms: “Beat strong opponents in important events, pin them early,
-      and keep winning lately, and you’ll sit at the top of your weight.”<br><br>
-      The following rankings are as of 2/18/25 for Iowa HS (before the state tournamnet).<br><br>
-      Use the filters below to narrow by
-      <span style='font-weight:600;'>Classification (League)</span>,
-      <span style='font-weight:600;'>Metro</span>, or
-      <span style='font-weight:600;'>Grade</span>, then expand any weight class to see its full table.
-    </div>
-    """,
+    '<div class="subheader">'
+    "Use the filters below to narrow by "
+    "<span style='font-weight:600;'>Classification (League)</span>, "
+    "<span style='font-weight:600;'>Metro</span>, or "
+    "<span style='font-weight:600;'>Grade</span>, "
+    "then toggle between the “Pound-for-Pound” tab or “By Weight Class” tab below."
+    "</div>",
     unsafe_allow_html=True,
 )
 
@@ -189,7 +146,6 @@ else:
 # 3c) Grade dropdown (show only 9–12 in numeric order, no “.0”)
 if "grade" in df_all.columns:
     grade_vals = sorted(df_all["grade"].dropna().unique().astype(int).tolist())
-    # Only keep 9,10,11,12 if present
     grade_vals = [g for g in grade_vals if g in [9, 10, 11, 12]]
     all_grades = ["(All)"] + [str(g) for g in grade_vals]
 else:
@@ -245,131 +201,180 @@ if selected_grade != "(All)" and "grade" in dff.columns:
 
 
 # -------------------------------------------------------
-# 5) LOOP OVER WEIGHT CLASSES & DISPLAY TABLES
+# 5) TABS: P4P vs. By Weight Class
 # -------------------------------------------------------
-if "weight" not in dff.columns:
-    st.error("❗️ Your data must include a column named “weight” (the weight class).")
-    st.stop()
+tab1, tab2 = st.tabs(["🏅 Pound-for-Pound Rankings", "⚖️ By Weight Class"])
 
-all_weights = sorted(dff["weight"].dropna().unique().tolist())
 
-for w in all_weights:
-    df_w = dff[dff["weight"] == w].copy()
-    if df_w.empty:
-        continue
-
-    # ──────────────────────────────────────────────────────────────────
-    # A) Re‐compute a DYNAMIC RANK (1,2,3,…) on the filtered subset
-    # ──────────────────────────────────────────────────────────────────
-    if "rank" in df_w.columns:
-        # Sort by the original “rank” ascending
-        df_w = df_w.sort_values(by="rank", ascending=True).reset_index(drop=True)
+# ---------------------
+# 5-A) P4P TAB
+# ---------------------
+with tab1:
+    st.markdown("### Pound-for-Pound Rankings")
+    if dff.shape[0] == 0:
+        st.write("No data available for the current filters.")
     else:
-        # If no original “rank” column, sort by Win_Pct descending
-        df_w = df_w.sort_values(by="Win_Pct", ascending=False).reset_index(drop=True)
+        # Sort by global_score descending
+        df_p4p = dff.copy()
+        df_p4p = df_p4p.sort_values(by="global_score", ascending=False).reset_index(drop=True)
 
-    # Now assign dynamic_rank = 1..N
-    df_w["dynamic_rank"] = df_w.index + 1
+        # Assign dynamic P4P rank = 1..N
+        df_p4p["P4P Rank"] = df_p4p.index + 1
 
-    # Figure out who is #1 in this weight for the expander label:
-    top_row = df_w[df_w["dynamic_rank"] == 1].iloc[0]
-    top_name = top_row["wrestler_name"]
-    top_team = top_row["team_name"]
-    expander_label = f"{w} | {top_name} ({top_team})"
-    # ──────────────────────────────────────────────────────────────────
-
-    with st.expander(expander_label, expanded=False):
-        # 5.1) Start building a display copy
-        df_display = df_w.copy()
-
-        # 5.2) Drop columns we do NOT want to show
-        drop_cols = [
-            "Classification",
-            "Metro",
-            "rank",       # original static rank
-            "Win_Pct",    # we’ll re‐format this as a percentage string
-        ]
-        df_display = df_display.drop(columns=drop_cols, errors="ignore")
-
-        # 5.3) Reorder & calculate new columns
-
-        # ----- Win % as a formatted string ----- #
-        if "Win_Pct" in df_w.columns:
-            df_display["Win %"] = df_w["Win_Pct"].apply(
-                lambda x: f"{x * 100:.1f}%" if pd.notnull(x) else "—"
-            )
-        else:
-            # If you only have “Wins” & “Losses,” compute Win_Pct on the fly
-            def _calc_win_pct(r):
-                total = r["Wins"] + r["Losses"]
-                if total == 0:
-                    return "—"
-                return f"{r['Wins'] / total * 100:.1f}%"
-            df_display["Win %"] = df_w.apply(_calc_win_pct, axis=1)
-
-        # ----- Bonus Pt % = (Pins + Tech_Falls + Major_Decisions) / (Wins + Losses) ----- #
-        def calc_bonus_pct(row):
-            total_matches = row["Wins"] + row["Losses"]
-            if total_matches == 0:
-                return "—"
-            bonus_pts = row["Pins"] + row["Tech_Falls"] + row["Major_Decisions"]
-            return f"{bonus_pts / total_matches * 100:.1f}%"
-
-        df_display["Bonus Pt %"] = df_w.apply(calc_bonus_pct, axis=1)
-
-        # 5.4) Decide on final column order:
-        desired_order = [
-            "dynamic_rank",
+        # Build a display DataFrame with only the desired columns:
+        #    P4P Rank, weight, wrestler_name, team_name, grade, FloWrestling Score
+        display_p4p = df_p4p[[
+            "P4P Rank",
+            "weight",
             "wrestler_name",
             "team_name",
             "grade",
-            "Wins",
-            "Losses",
-            "Win %",
-            "Bonus Pt %",
-            "Pins",
-            "Tech_Falls",
-            "Major_Decisions",
-        ]
-        cols_to_show = [c for c in desired_order if c in df_display.columns]
-        df_display = df_display[cols_to_show]
+            "global_score",
+        ]].copy()
 
-        # 5.5) Rename for nicer column headers
-        df_display = df_display.rename(
+        # Rename columns
+        display_p4p = display_p4p.rename(
             columns={
-                "dynamic_rank": "Rank",
+                "weight": "Weight",
                 "wrestler_name": "Wrestler Name",
                 "team_name": "Team Name",
                 "grade": "Grade",
-                "Wins": "Wins",
-                "Losses": "Losses",
-                "Win %": "Win %",
-                "Bonus Pt %": "Bonus Pt %",
-                "Pins": "Pins",
-                "Tech_Falls": "Tech Falls",
-                "Major_Decisions": "Major Decisions",
+                "global_score": "FloWrestling Score",
             }
         )
 
-        # 5.6) Convert Grade to an integer (drop any “.0”)
-        if "Grade" in df_display.columns:
-            df_display["Grade"] = df_display["Grade"].astype(int)
+        # Convert Grade to int (drop .0)
+        display_p4p["Grade"] = display_p4p["Grade"].astype(int)
 
-        # 5.7) Reset pandas index so we don’t see “0,1,2…” on the far left
-        df_display = df_display.reset_index(drop=True)
+        # Show as a Streamlit dataframe (hide_index=True removes the pandas index)
+        st.dataframe(display_p4p, use_container_width=True, hide_index=True)
 
-        # 5.8) Finally, show it with st.dataframe (hide_index=True removes pandas index column)
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
+
+# ---------------------
+# 5-B) BY WEIGHT CLASS TAB
+# ---------------------
+with tab2:
+    st.markdown("### By Weight Class")
+    if "weight" not in dff.columns:
+        st.error("❗️ Your data must include a column named “weight” (the weight class).")
+    else:
+        # 5.B.i) Build a sorted list of weights that remain after filtering
+        weight_list = sorted(dff["weight"].dropna().unique().tolist())
+        if len(weight_list) == 0:
+            st.write("No weight‐class data available for the current filters.")
+        else:
+            # 5.B.ii) Let the user click a weight (radio) instead of a dropdown
+            selected_weight = st.radio(
+                label="Select Weight Class:",
+                options=weight_list,
+                index=0,
+                horizontal=True,  # renders radio options horizontally if space allows
+                key="weight_radio",
+            )
+
+            # 5.B.iii) Filter the data to that single weight class
+            df_w = dff[dff["weight"] == selected_weight].copy()
+            if df_w.shape[0] == 0:
+                st.write(f"No wrestlers found at {selected_weight} for the current filters.")
+            else:
+                # 1) Sort by original “rank” ascending (if exists), else by Win_Pct descending
+                if "rank" in df_w.columns:
+                    df_w = df_w.sort_values(by="rank", ascending=True).reset_index(drop=True)
+                else:
+                    if "Win_Pct" in df_w.columns:
+                        df_w = df_w.sort_values(by="Win_Pct", ascending=False).reset_index(drop=True)
+                    else:
+                        # If no Win_Pct, just sort by global_score descending
+                        df_w = df_w.sort_values(by="global_score", ascending=False).reset_index(drop=True)
+
+                # 2) Assign a dynamic weight‐class rank = 1..N
+                df_w["Rank"] = df_w.index + 1
+
+                # 3) Drop columns we do NOT want to show
+                drop_cols = [
+                    "Classification",
+                    "Metro",
+                    "rank",        # original static rank
+                    "leagues"      # we already dropped it in load_data, but just in case
+                ]
+                df_display = df_w.drop(columns=drop_cols, errors="ignore").copy()
+
+                # 4) Re‐format “Win %” (if present) as a string
+                if "Win_Pct" in df_w.columns:
+                    df_display["Win %"] = df_w["Win_Pct"].apply(
+                        lambda x: f"{x * 100:.1f}%" if pd.notnull(x) else "—"
+                    )
+                else:
+                    # If you only have Wins/Losses, compute Win % on the fly
+                    def _calc_win_pct(r):
+                        total = r["Wins"] + r["Losses"]
+                        if total == 0:
+                            return "—"
+                        return f"{r['Wins'] / total * 100:.1f}%"
+                    df_display["Win %"] = df_w.apply(_calc_win_pct, axis=1)
+
+                # 5) Compute “Bonus Pt %” = (Pins + Tech_Falls + Major_Decisions) / (Wins + Losses)
+                def _calc_bonus_pct(r):
+                    total_matches = r["Wins"] + r["Losses"]
+                    if total_matches == 0:
+                        return "—"
+                    bonus_pts = r["Pins"] + r["Tech_Falls"] + r["Major_Decisions"]
+                    return f"{bonus_pts / total_matches * 100:.1f}%"
+                df_display["Bonus Pt %"] = df_w.apply(_calc_bonus_pct, axis=1)
+
+                # 6) Build the final column order we want to show
+                desired_order = [
+                    "Rank",
+                    "wrestler_name",
+                    "team_name",
+                    "grade",
+                    "Wins",
+                    "Losses",
+                    "Win %",
+                    "Bonus Pt %",
+                    "Pins",
+                    "Tech_Falls",
+                    "Major_Decisions",
+                    "global_score",
+                ]
+                cols_to_show = [c for c in desired_order if c in df_display.columns]
+                df_display = df_display[cols_to_show]
+
+                # 7) Rename columns for nicer headers
+                df_display = df_display.rename(
+                    columns={
+                        "wrestler_name": "Wrestler Name",
+                        "team_name": "Team Name",
+                        "grade": "Grade",
+                        "Wins": "Wins",
+                        "Losses": "Losses",
+                        "Win %": "Win %",
+                        "Bonus Pt %": "Bonus Pt %",
+                        "Pins": "Pins",
+                        "Tech_Falls": "Tech Falls",
+                        "Major_Decisions": "Major Decisions",
+                        "global_score": "FloWrestling Score",
+                    }
+                )
+
+                # 8) Convert Grade to int (drop any “.0”)
+                if "Grade" in df_display.columns:
+                    df_display["Grade"] = df_display["Grade"].astype(int)
+
+                # 9) Reset pandas index so we don’t see “0,1,2…” on the far left
+                df_display = df_display.reset_index(drop=True)
+
+                # 10) Finally, show it with st.dataframe (hide_index=True removes pandas index column)
+                st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 
 # -------------------------------------------------------
 # 6) OPTIONAL FOOTER / DEPLOY LINK
 # -------------------------------------------------------
-# If you plan to deploy this to Streamlit Cloud, you can show a “Deploy” badge:
 st.markdown(
     """
     <div style="text-align:right; margin-top: 1rem;">
-      <a href="https://share.streamlit.io/your-username/your-repo-name/main/streamlittest.py" target="_blank">
+      <a href="https://share.streamlit.io/your‐username/your‐repo‐name/main/streamlit_app.py" target="_blank">
         <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Streamlit" style="height:32px;">
       </a>
     </div>

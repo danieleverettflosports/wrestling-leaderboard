@@ -28,9 +28,10 @@ BASE_DIR = os.path.dirname(__file__)  # directory where this script lives
 REG_PATH  = os.path.join(BASE_DIR, "Fontfabric - UniNeueRegular.ttf")
 BOLD_PATH = os.path.join(BASE_DIR, "Fontfabric - UniNeueBold.ttf")
 
-# If these fail, the code will raise FileNotFoundError, so you can confirm paths.
+# If these fail, you’ll see a FileNotFoundError
 base64_reg  = _load_font_base64(REG_PATH)
 base64_bold = _load_font_base64(BOLD_PATH)
+
 
 # -------------------------------------------------------
 # 2) INJECT GLOBAL CSS (Uni Neue + Black/Red Palette + Compact Table)
@@ -242,11 +243,11 @@ try:
     df_all = load_data(DATA_PATH)
 except FileNotFoundError:
     st.error(
-        f\"\"\"
+        f"""
         ❗️ Could not find “{DATA_PATH}” in the same directory as this script.
         Please make sure you have a CSV named `{DATA_PATH}` (or change DATA_PATH
         to point to your actual file), then re-run.
-        \"\"\"
+        """
     )
     st.stop()
 
@@ -479,4 +480,3 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-

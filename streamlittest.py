@@ -11,69 +11,78 @@ st.set_page_config(
     layout="wide",
 )
 
-# Inject Flow-style CSS (with Inter as our web-font; switch to Uni Neue if you host that yourself)
+# -------------------------------------------------------------------
+# 1.A) INJECT UNI NEUE VIA @font-face (TTF + OTF must live alongside)
+# -------------------------------------------------------------------
 _FLOW_CSS = """
 <style>
-/* -------------------------------------------
-   1) IMPORT A WEB-FONT (Inter) from Google
-   -------------------------------------------
-   If you want to use the real 'Uni Neue' instead,
-   uncomment the @font-face block below and host
-   your .woff/.woff2 files next to this script.
--------------------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-/* If you have Uni Neue files locally, host them in this same folder
-   (or on your CDN) and uncomment + adjust the lines below:
-
+/* --------------------------------------------------
+   1) DECLARE @font-face FOR UNI NEUE (TTF & OTF) 
+   --------------------------------------------------
+   Place these four files in the SAME DIRECTORY as streamlit_app.py:
+     • UniNeue-Regular.ttf
+     • UniNeue-Regular.otf
+     • UniNeue-SemiBold.ttf
+     • UniNeue-SemiBold.otf
+     • UniNeue-Bold.ttf
+     • UniNeue-Bold.otf
+   (adjust filenames below if yours differ)
+--------------------------------------------------- */
 @font-face {
     font-family: 'Uni Neue';
     src: url('UniNeue-Regular.woff2') format('woff2'),
-         url('UniNeue-Regular.woff') format('woff');
+         url('UniNeue-Regular.otf') format('opentype'),
+         url('UniNeue-Regular.ttf') format('truetype');
     font-weight: 400;
     font-style: normal;
 }
 @font-face {
     font-family: 'Uni Neue';
     src: url('UniNeue-SemiBold.woff2') format('woff2'),
-         url('UniNeue-SemiBold.woff') format('woff');
+         url('UniNeue-SemiBold.otf') format('opentype'),
+         url('UniNeue-SemiBold.ttf') format('truetype');
     font-weight: 600;
     font-style: normal;
 }
 @font-face {
     font-family: 'Uni Neue';
     src: url('UniNeue-Bold.woff2') format('woff2'),
-         url('UniNeue-Bold.woff') format('woff');
+         url('UniNeue-Bold.otf') format('opentype'),
+         url('UniNeue-Bold.ttf') format('truetype');
     font-weight: 700;
     font-style: normal;
 }
-*/
 
-/* -------------------------------------------
-   2) FORCE THE GLOBAL FONT – override Streamlit’s defaults
--------------------------------------------- */
-* {
-    /* To use Uni Neue, change 'Inter' → 'Uni Neue' here, once you’ve uncommented the @font-face above */
-    font-family: 'Inter', sans-serif !important;
+/* --------------------------------------------------
+   1.B) FORCE ALL TEXT TO UNI NEUE (fallback: sans-serif)
+   -------------------------------------------------- */
+html, body, [class*="css"] {
+    font-family: 'Uni Neue', sans-serif !important;
     color: #2A2A2A !important;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
 }
 
-/* -------------------------------------------
+/* --------------------------------------------------
+   2) ADD EXTRA TOP PADDING SO NOTHING GETS HIDDEN 
+      BEHIND STREAMLIT’S TOP BAR
+   -------------------------------------------------- */
+.block-container {
+    padding-top: 2.5rem !important;   /* increase if still clipped */
+    padding-bottom: 1rem !important;
+}
+
+/* --------------------------------------------------
    3) HEADERS: match Flow’s “headline-3” look
--------------------------------------------- */
+   -------------------------------------------------- */
 h1 {
-    font-size: 2rem !important;        /* slightly smaller for mobile */
+    font-size: 2rem !important;      /* slightly smaller for mobile */
     font-weight: 700 !important;
     color: #2A2A2A !important;
     margin-bottom: 0.25rem !important;
 }
 
-/* Subheader text under the main heading */
+/* Subheader text below main heading */
 .subheader {
-    font-size: 0.9rem !important;      /* a bit more compact */
+    font-size: 0.9rem !important;    /* compact for mobile */
     color: #4F4F4F !important;
     margin-top: -0.4rem !important;
     margin-bottom: 1rem !important;
@@ -81,9 +90,8 @@ h1 {
 
 /* --------------------------------------------------
    4) SELECTBOX / RADIOBUTTON STYLING
-   (Streamlit baseweb selects are nested under [data-baseweb="select"])
-   We add padding + light gray background to mimic Flow’s style.
---------------------------------------------------- */
+   (targeting BaseWeb classes that Streamlit uses internally)
+   -------------------------------------------------- */
 [data-baseweb="select"] > div > div {
     background-color: #F1F3F5 !important;
     color: #2A2A2A !important;
@@ -92,11 +100,11 @@ h1 {
     padding: 0.4rem 0.7rem !important;
 }
 [data-baseweb="select"] > div > div:focus-within {
-    border: 1px solid #E63946 !important;
+    border: 1px solid #E63946 !important;  /* Flow red accent */
     box-shadow: none !important;
 }
 
-/* For horizontal radio buttons, we target baseweb’s radio group */
+/* Horizontal radio buttons for weight selection */
 [data-baseweb="radio"] {
     display: flex;
     flex-wrap: wrap;
@@ -107,11 +115,9 @@ h1 {
 }
 
 /* --------------------------------------------------
-   5) DATAFRAME (st.dataframe) ADJUSTMENTS
-   * Hide the pandas index column (Streamlit v1+ uses different classes)
-   * Make column headers a light gray background, left-aligned
-   * Reduce padding inside header cells
---------------------------------------------------- */
+   5) DATAFRAME (st.dataframe) STYLING
+   -------------------------------------------------- */
+/* Column headers: light gray background, bold text, left-aligned */
 .css-1d391kg th {
     background-color: #F1F3F5 !important;
     color: #2A2A2A !important;
@@ -120,26 +126,18 @@ h1 {
     padding: 0.5rem !important;
 }
 
-/* The exact class to hide the index can change; this was valid as of Streamlit 1. 
-   If it doesn’t hide the index, inspect the <table> in your browser to find which 
-   class wraps the “index” column’s <th> or <td>. */
+/* Hide the pandas index column entirely (class may change in newer Streamlit) */
 .css-k1vhr4.e1tzin5v0 {
     display: none !important;
 }
 
 /* --------------------------------------------------
-   6) MAKE THINGS MORE COMPACT / MOBILE-FRIENDLY
---------------------------------------------------- */
-.block-container {
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
-}
+   6) COMPACT / MOBILE-FRIENDLY TWEAKS
+   -------------------------------------------------- */
 .stDataFrame > label {
     font-size: 0.85rem !important;
 }
-
 @media only screen and (max-width: 600px) {
-    /* shrink margins on very small screens */
     .block-container {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
@@ -388,7 +386,6 @@ with tab2:
                     "Classification",
                     "Metro",
                     "rank",        # original static rank
-                    # “leagues” was already dropped in load_data
                 ]
                 df_display = df_w.drop(columns=drop_cols, errors="ignore").copy()
 
@@ -442,7 +439,6 @@ with tab2:
                         "grade": "Grade",
                         "Tech_Falls": "Tech Falls",
                         "Major_Decisions": "Major Decisions",
-                        # Note: “FloWrestling Score” is already named
                     }
                 )
 

@@ -4,97 +4,169 @@ import streamlit as st
 import pandas as pd
 
 # -------------------------------------------------------
-# 1) PAGE CONFIG & GLOBAL CSS (Uni Neue + compact/mobile tweaks)
+# 1) PAGE CONFIG & GLOBAL CSS (Uni Neue + BLACK + RED accents)
 # -------------------------------------------------------
 st.set_page_config(
     page_title="Iowa Wrestling Leaderboard",
     layout="wide",
 )
 
-# Inject Uni Neue @font-face (from the same folder) + FlowWrestling–style overrides + small media query
+# ─────────────────────────────────────────────────────────────────────
+# INJECT CUSTOM CSS:
+#  • Double‐check @font-face URLs so that Uni Neue actually loads.
+#  • Override ALL Streamlit text to ‘Uni Neue’, forced.
+#  • Use deep black (#1A1A1A) for most text.
+#  • Use Flow’s red (#E63946) as the highlight/active color.
+#  • Tweak table headers, tabs, buttons to feel “Flow bracket”‐y.
+#  • Compact/mobile tweaks at max-width:768px.
+# ─────────────────────────────────────────────────────────────────────
 _FLOW_CSS = """
 <style>
-/* ============================================
-   A) LOAD UNI NEUE VIA @font-face (same folder)
-   ============================================ */
+/* ─────────────────────────────────────────────────────────────────────
+   A) UNI NEUE @font-face (double‐check both URL patterns)
+   ───────────────────────────────────────────────────────────────────── */
 @font-face {
   font-family: 'Uni Neue';
-  /* Regular = weight 400 */
-  src: url("Fontfabric - UniNeueRegular.ttf") format("truetype");
+  /* Regular (400) */
+  src: url("/Fontfabric - UniNeueRegular.ttf") format("truetype"),
+       url("./Fontfabric - UniNeueRegular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
 }
 @font-face {
   font-family: 'Uni Neue';
-  /* Bold = weight 700 */
-  src: url("Fontfabric - UniNeueBold.ttf") format("truetype");
+  /* Bold (700) */
+  src: url("/Fontfabric - UniNeueBold.ttf") format("truetype"),
+       url("./Fontfabric - UniNeueBold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
 }
-/* (Optional: add more weights/italics if you want) */
 
-
-/* ======================================================
-   B) FORCE ALL STREAMLIT TEXT TO USE UNI NEUE (fallback=sans-serif)
-   ====================================================== */
+/* ─────────────────────────────────────────────────────────────────────
+   B) FORCE ALL STREAMLIT TEXT → UNI NEUE + DEEP BLACK
+   ───────────────────────────────────────────────────────────────────── */
 html,
 body,
 [class*="css"],
 .stApp {
   font-family: 'Uni Neue', sans-serif !important;
-  color: #2A2A2A !important;
-  margin: 0;    /* remove default page margin */
+  color: #1A1A1A !important;     /* very dark charcoal/black */
+  margin: 0;
   padding: 0;
+  background-color: #FFFFFF !important; /* keep page white */
 }
 
-/* =========================================================
-   C) FLOWWRESTLING-STYLE OVERRIDES (headings, selectboxes, etc.)
-   ========================================================= */
-/* Main header (trophy + “Iowa Wrestling Leaderboard”) */
+/* Links & button text default to deep black unless overridden */
+a, button, label, span, div {
+  color: #1A1A1A !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   C) MAIN HEADER + SUBHEADER (matching Flow’s bracket style)
+   ───────────────────────────────────────────────────────────────────── */
+/* Main Header: Trophy + “Iowa Wrestling Leaderboard” */
 h1 {
   font-size: 2.5rem !important;
   font-weight: 700 !important;
-  color: #2A2A2A !important;
   margin-bottom: 0.2rem;
+  color: #1A1A1A !important;
 }
 
-/* Subheader text */
+/* Subheader text (below the h1) */
 .subheader {
   font-size: 1rem !important;
-  color: #4F4F4F !important;
+  color: #4F4F4F !important; /* slightly lighter for subtext */
   margin-top: -0.5rem;
   margin-bottom: 1.25rem;
 }
 
-/* Customize the Selectbox (filters) */
-[data-testid="stSelectbox"] .css-1wrcr25 {
-  background-color: #F1F3F5 !important;
-  color: #2A2A2A !important;
-  border-radius: 0.5rem !important;
-  border: 1px solid #E0E0E0 !important;
-  padding: 0.5rem 0.75rem !important;
+/* ─────────────────────────────────────────────────────────────────────
+   D) FLOW TABLE / DATAFRAME STYLING (BLACK HEADERS + LIGHT GREY BG)
+   ───────────────────────────────────────────────────────────────────── */
+/* Column headers in st.dataframe: dark text on #F1F1F1 background */
+.css-1d391kg th {
+  background-color: #F1F1F1 !important;
+  color: #1A1A1A !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  padding: 0.6rem !important;
 }
+
+/* Hide the pandas index column completely */
+.css-k1vhr4.e1tzin5v0 {
+  display: none !important;
+}
+
+/* Rows: slightly darker divider line */
+.css-1d391kg,
+.css-1xarl3l {  /* the table container */
+  border-color: #E0E0E0 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   E) SELECTBOXES + RADIO + BUTTONS (RED FOCUS / ACTIVE COLOR)
+   ───────────────────────────────────────────────────────────────────── */
+/* Customize the Selectbox (filters) background + border */
+[data-testid="stSelectbox"] .css-1wrcr25 {
+  background-color: #F7F7F7 !important;
+  color: #1A1A1A !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #D9D9D9 !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.95rem !important;
+}
+/* Focus / active state → Flow red (#E63946) */
 [data-testid="stSelectbox"] .css-1wrcr25:focus-within {
   border: 1px solid #E63946 !important;
   box-shadow: none !important;
 }
 
-/* Style DataFrame column headers to match Flow’s look */
-.css-1d391kg th {
-  background-color: #F1F3F5 !important;
-  color: #2A2A2A !important;
+/* When a radio button is selected/hovered: use red accent */
+.stRadio button:checked + div, 
+.stRadio button:focus + div,
+.stRadio div:hover {
+  border-color: #E63946 !important;
+  color: #E63946 !important;
+}
+
+/* Buttons (e.g. “Download CSV” if you have any) */
+.stButton button {
+  background-color: #E63946 !important;
+  color: #FFFFFF !important;
+  border: none !important;
   font-weight: 600 !important;
-  text-align: left !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 1rem !important;
+}
+.stButton button:hover {
+  background-color: #D12F3F !important; /* slightly darker red on hover */
 }
 
-/* Remove the pandas index column entirely */
-.css-k1vhr4.e1tzin5v0 {
-  display: none !important;
+/* ─────────────────────────────────────────────────────────────────────
+   F) TABS: ACTIVE TAB RED + Black TEXT, INACTIVE TAB GRAY
+   ───────────────────────────────────────────────────────────────────── */
+.css-1avcm0n.e1fqkh3o { /* Tab container */
+  border-bottom: 1px solid #E0E0E0 !important;
+}
+.css-1avcm0n.e1fqkh3o button {
+  font-family: 'Uni Neue', sans-serif !important;
+  font-weight: 600 !important;
+  color: #4F4F4F !important; /* inactive tab text = medium gray */
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0.6rem 1.2rem !important;
+}
+.css-1avcm0n.e1fqkh3o button[aria-selected="true"] {
+  color: #E63946 !important;       /* active tab text = Flow red */
+  border-bottom: 3px solid #E63946 !important; /* thick red underline */
+}
+.css-1avcm0n.e1fqkh3o button:hover {
+  color: #E63946 !important;
 }
 
-/* ============================================================
-   D) COMPACT + MOBILE FIXES (when viewport ≤ 768px)
-   ============================================================ */
+/* ─────────────────────────────────────────────────────────────────────
+   G) COMPACT / MOBILE ADJUSTMENTS (≤768px)
+   ───────────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   /* Shrink the main heading on tablets/phones */
   h1 {
@@ -110,6 +182,7 @@ h1 {
   /* Smaller padding for selectboxes on narrow screens */
   [data-testid="stSelectbox"] .css-1wrcr25 {
     padding: 0.3rem 0.5rem !important;
+    font-size: 0.85rem !important;
   }
   /* Reduce overall padding in the Streamlit container */
   .stApp {
@@ -173,7 +246,7 @@ st.markdown(
     "<span style='font-weight:600;'>Classification (League)</span>, "
     "<span style='font-weight:600;'>Metro</span>, or "
     "<span style='font-weight:600;'>Grade</span>, "
-    "then toggle between the “Pound‐for‐Pound” tab and the “By Weight Class” tab below."
+    "then toggle between the “Pound-for-Pound” tab and the “By Weight Class” tab below."
     "</div>",
     unsafe_allow_html=True,
 )
@@ -275,8 +348,7 @@ with tab1:
             lambda x: f"{x:.2f}"
         )
 
-        # 4) Build display DataFrame with desired columns:
-        #    P4P Rank → FloWrestling Score → Weight → Wrestler Name → Team Name → Grade
+        # 4) Build display DataFrame
         display_p4p = df_p4p[[
             "P4P Rank",
             "FloWrestling Score",
@@ -286,7 +358,7 @@ with tab1:
             "grade",
         ]].copy()
 
-        # 5) Rename columns for nicer headers
+        # 5) Rename columns
         display_p4p = display_p4p.rename(
             columns={
                 "weight": "Weight",
@@ -296,10 +368,10 @@ with tab1:
             }
         )
 
-        # 6) Convert Grade → int (drop any .0)
+        # 6) Convert Grade → int
         display_p4p["Grade"] = display_p4p["Grade"].astype(int)
 
-        # 7) Show the DataFrame (hide pandas index)
+        # 7) Show DataFrame (hide pandas index)
         st.dataframe(display_p4p, use_container_width=True, hide_index=True)
 
 
@@ -316,7 +388,7 @@ with tab2:
         if len(weight_list) == 0:
             st.write("No weight-class data available for the current filters.")
         else:
-            # 5.B.ii) Render a horizontal radio button group for weights
+            # 5.B.ii) Render horizontal radio button group for weights
             selected_weight = st.radio(
                 label="Select Weight Class:",
                 options=weight_list,
@@ -330,14 +402,13 @@ with tab2:
             if df_w.shape[0] == 0:
                 st.write(f"No wrestlers found at {selected_weight} for the current filters.")
             else:
-                # 1) Sort by original “rank” (if present) ascending; otherwise by Win_Pct desc
+                # 1) Sort by original “rank” or by Win_Pct/global_score
                 if "rank" in df_w.columns:
                     df_w = df_w.sort_values(by="rank", ascending=True).reset_index(drop=True)
                 else:
                     if "Win_Pct" in df_w.columns:
                         df_w = df_w.sort_values(by="Win_Pct", ascending=False).reset_index(drop=True)
                     else:
-                        # Fallback: sort by FloWrestling Score
                         df_w = df_w.sort_values(by="global_score", ascending=False).reset_index(drop=True)
 
                 # 2) Assign dynamic “Rank” = 1..N
@@ -352,8 +423,7 @@ with tab2:
                 drop_cols = [
                     "Classification",
                     "Metro",
-                    "rank",        # original static rank
-                    # “leagues” was already dropped in load_data
+                    "rank",
                 ]
                 df_display = df_w.drop(columns=drop_cols, errors="ignore").copy()
 
@@ -363,7 +433,6 @@ with tab2:
                         lambda x: f"{x * 100:.1f}%" if pd.notnull(x) else "—"
                     )
                 else:
-                    # If only Wins/Losses, compute Win % on the fly
                     def _calc_win_pct(r):
                         total = r["Wins"] + r["Losses"]
                         if total == 0:
@@ -380,8 +449,7 @@ with tab2:
                     return f"{bonus_pts / total_matches * 100:.1f}%"
                 df_display["Bonus Pt %"] = df_w.apply(_calc_bonus_pct, axis=1)
 
-                # 7) Build the final column order:
-                #    Rank → FloWrestling Score → Wrestler Name → Team Name → Grade → Wins → Losses → Win % → Bonus Pt % → Pins → Tech Falls → Major Decisions
+                # 7) Build final column order
                 desired_order = [
                     "Rank",
                     "FloWrestling Score",
@@ -407,15 +475,14 @@ with tab2:
                         "grade": "Grade",
                         "Tech_Falls": "Tech Falls",
                         "Major_Decisions": "Major Decisions",
-                        # “FloWrestling Score” is already correctly named
                     }
                 )
 
-                # 9) Convert Grade → int (drop any .0)
+                # 9) Convert Grade → int
                 if "Grade" in df_display.columns:
                     df_display["Grade"] = df_display["Grade"].astype(int)
 
-                # 10) Finally, show it (hiding the pandas index)
+                # 10) Show DataFrame (hide pandas index)
                 st.dataframe(df_display, use_container_width=True, hide_index=True)
 
 
@@ -426,7 +493,8 @@ st.markdown(
     """
     <div style="text-align:right; margin-top: 1rem;">
       <a href="https://share.streamlit.io/your-username/your-repo-name/main/streamlit_app.py" target="_blank">
-        <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Streamlit" style="height:32px;">
+        <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" 
+             alt="Streamlit" style="height:32px;">
       </a>
     </div>
     """,

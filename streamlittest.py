@@ -11,55 +11,145 @@ st.set_page_config(
     layout="wide",
 )
 
-# Inject FlowWrestling‐style CSS
+# Inject Flow-style CSS (with Inter as our web-font; switch to Uni Neue if you host that yourself)
 _FLOW_CSS = """
 <style>
-/* Use a clean sans-serif almost identical to Flow’s “headline-3” look */
-html, body, [class*="css"]  {
+/* -------------------------------------------
+   1) IMPORT A WEB-FONT (Inter) from Google
+   -------------------------------------------
+   If you want to use the real 'Uni Neue' instead,
+   uncomment the @font-face block below and host
+   your .woff/.woff2 files next to this script.
+-------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+/* If you have Uni Neue files locally, host them in this same folder
+   (or on your CDN) and uncomment + adjust the lines below:
+
+@font-face {
+    font-family: 'Uni Neue';
+    src: url('UniNeue-Regular.woff2') format('woff2'),
+         url('UniNeue-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Uni Neue';
+    src: url('UniNeue-SemiBold.woff2') format('woff2'),
+         url('UniNeue-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Uni Neue';
+    src: url('UniNeue-Bold.woff2') format('woff2'),
+         url('UniNeue-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+*/
+
+/* -------------------------------------------
+   2) FORCE THE GLOBAL FONT – override Streamlit’s defaults
+-------------------------------------------- */
+* {
+    /* To use Uni Neue, change 'Inter' → 'Uni Neue' here, once you’ve uncommented the @font-face above */
     font-family: 'Inter', sans-serif !important;
     color: #2A2A2A !important;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-/* Style the main header (trophy + “Iowa Wrestling Leaderboard”) */
+/* -------------------------------------------
+   3) HEADERS: match Flow’s “headline-3” look
+-------------------------------------------- */
 h1 {
-    font-size: 2.5rem !important;
+    font-size: 2rem !important;        /* slightly smaller for mobile */
     font-weight: 700 !important;
     color: #2A2A2A !important;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.25rem !important;
 }
 
-/* Style the subheader text */
+/* Subheader text under the main heading */
 .subheader {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important;      /* a bit more compact */
     color: #4F4F4F !important;
-    margin-top: -0.5rem;
-    margin-bottom: 1.25rem;
+    margin-top: -0.4rem !important;
+    margin-bottom: 1rem !important;
 }
 
-/* Customize the Selectbox (filters) */
-[data-testid="stSelectbox"] .css-1wrcr25 {
+/* --------------------------------------------------
+   4) SELECTBOX / RADIOBUTTON STYLING
+   (Streamlit baseweb selects are nested under [data-baseweb="select"])
+   We add padding + light gray background to mimic Flow’s style.
+--------------------------------------------------- */
+[data-baseweb="select"] > div > div {
     background-color: #F1F3F5 !important;
     color: #2A2A2A !important;
     border-radius: 0.5rem !important;
     border: 1px solid #E0E0E0 !important;
-    padding: 0.5rem 0.75rem !important;
+    padding: 0.4rem 0.7rem !important;
 }
-[data-testid="stSelectbox"] .css-1wrcr25:focus-within {
+[data-baseweb="select"] > div > div:focus-within {
     border: 1px solid #E63946 !important;
     box-shadow: none !important;
 }
 
-/* Style the DataFrame column headers */
+/* For horizontal radio buttons, we target baseweb’s radio group */
+[data-baseweb="radio"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+[data-baseweb="radio"] label {
+    font-size: 0.9rem !important;
+}
+
+/* --------------------------------------------------
+   5) DATAFRAME (st.dataframe) ADJUSTMENTS
+   * Hide the pandas index column (Streamlit v1+ uses different classes)
+   * Make column headers a light gray background, left-aligned
+   * Reduce padding inside header cells
+--------------------------------------------------- */
 .css-1d391kg th {
     background-color: #F1F3F5 !important;
     color: #2A2A2A !important;
     font-weight: 600 !important;
     text-align: left !important;
+    padding: 0.5rem !important;
 }
 
-/* Remove the pandas index column entirely */
+/* The exact class to hide the index can change; this was valid as of Streamlit 1. 
+   If it doesn’t hide the index, inspect the <table> in your browser to find which 
+   class wraps the “index” column’s <th> or <td>. */
 .css-k1vhr4.e1tzin5v0 {
     display: none !important;
+}
+
+/* --------------------------------------------------
+   6) MAKE THINGS MORE COMPACT / MOBILE-FRIENDLY
+--------------------------------------------------- */
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+.stDataFrame > label {
+    font-size: 0.85rem !important;
+}
+
+@media only screen and (max-width: 600px) {
+    /* shrink margins on very small screens */
+    .block-container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    h1 {
+        font-size: 1.75rem !important;
+    }
+    .subheader {
+        font-size: 0.8rem !important;
+    }
 }
 </style>
 """

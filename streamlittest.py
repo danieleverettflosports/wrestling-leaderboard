@@ -12,86 +12,125 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------------
-# 1.A) INJECT UNI NEUE VIA @font-face (TTF + OTF must live alongside)
+# 1.A) INJECT UNI NEUE VIA @font-face (USE YOUR REAL FILENAMES)
 # -------------------------------------------------------------------
 _FLOW_CSS = """
 <style>
-/* --------------------------------------------------
-   1) DECLARE @font-face FOR UNI NEUE (TTF & OTF) 
-   --------------------------------------------------
-   Place these four files in the SAME DIRECTORY as streamlit_app.py:
-     • UniNeue-Regular.ttf
-     • UniNeue-Regular.otf
-     • UniNeue-SemiBold.ttf
-     • UniNeue-SemiBold.otf
-     • UniNeue-Bold.ttf
-     • UniNeue-Bold.otf
-   (adjust filenames below if yours differ)
---------------------------------------------------- */
+/* -------------------------------------------------------------------
+   EMBED UNI NEUE (using your actual filenames under “OTF” and “TTF”)
+   -------------------------------------------------------------------
+   Make sure these font files live in the SAME DIRECTORY as this script:
+     • Fontfabric - UniNeueRegular.ttf
+     • Fontfabric - UniNeueRegular.otf
+     • Fontfabric - UniNeueSemiBold.ttf
+     • Fontfabric - UniNeueSemiBold.otf
+     • Fontfabric - UniNeueBold.ttf
+     • Fontfabric - UniNeueBold.otf
+     • (You can add Light, Thin, Black, etc., if you want)
+*/
+
+/* 400 / Regular */
 @font-face {
     font-family: 'Uni Neue';
-    src: url('UniNeue-Regular.woff2') format('woff2'),
-         url('UniNeue-Regular.otf') format('opentype'),
-         url('UniNeue-Regular.ttf') format('truetype');
+    src: 
+      url("Fontfabric - UniNeueRegular.woff2") format("woff2"),  
+      url("Fontfabric - UniNeueRegular.otf")  format("opentype"),
+      url("Fontfabric - UniNeueRegular.ttf")  format("truetype");
     font-weight: 400;
     font-style: normal;
 }
+
+/* 600 / SemiBold */
 @font-face {
     font-family: 'Uni Neue';
-    src: url('UniNeue-SemiBold.woff2') format('woff2'),
-         url('UniNeue-SemiBold.otf') format('opentype'),
-         url('UniNeue-SemiBold.ttf') format('truetype');
+    src: 
+      url("Fontfabric - UniNeueSemiBold.woff2") format("woff2"),
+      url("Fontfabric - UniNeueSemiBold.otf")  format("opentype"),
+      url("Fontfabric - UniNeueSemiBold.ttf")  format("truetype");
     font-weight: 600;
     font-style: normal;
 }
+
+/* 700 / Bold */
 @font-face {
     font-family: 'Uni Neue';
-    src: url('UniNeue-Bold.woff2') format('woff2'),
-         url('UniNeue-Bold.otf') format('opentype'),
-         url('UniNeue-Bold.ttf') format('truetype');
+    src: 
+      url("Fontfabric - UniNeueBold.woff2") format("woff2"),
+      url("Fontfabric - UniNeueBold.otf")  format("opentype"),
+      url("Fontfabric - UniNeueBold.ttf")  format("truetype");
     font-weight: 700;
     font-style: normal;
 }
 
-/* --------------------------------------------------
-   1.B) FORCE ALL TEXT TO UNI NEUE (fallback: sans-serif)
-   -------------------------------------------------- */
+/* (OPTIONAL) 300 / Light */
+@font-face {
+    font-family: 'Uni Neue';
+    src: 
+      url("Fontfabric - UniNeueLight.woff2") format("woff2"),
+      url("Fontfabric - UniNeueLight.otf")  format("opentype"),
+      url("Fontfabric - UniNeueLight.ttf")  format("truetype");
+    font-weight: 300;
+    font-style: normal;
+}
+
+/* (OPTIONAL) 100 / Thin */
+@font-face {
+    font-family: 'Uni Neue';
+    src: 
+      url("Fontfabric - UniNeueThin.woff2") format("woff2"),
+      url("Fontfabric - UniNeueThin.otf")  format("opentype"),
+      url("Fontfabric - UniNeueThin.ttf")  format("truetype");
+    font-weight: 100;
+    font-style: normal;
+}
+
+/* (OPTIONAL) 900 / Black */
+@font-face {
+    font-family: 'Uni Neue';
+    src: 
+      url("Fontfabric - UniNeueBlack.woff2") format("woff2"),
+      url("Fontfabric - UniNeueBlack.otf")  format("opentype"),
+      url("Fontfabric - UniNeueBlack.ttf")  format("truetype");
+    font-weight: 900;
+    font-style: normal;
+}
+
+/* -------------------------------------------------------------------
+   FORCE EVERYTHING TO UNI NEUE (fallback to sans‐serif)
+   ------------------------------------------------------------------- */
 html, body, [class*="css"] {
     font-family: 'Uni Neue', sans-serif !important;
     color: #2A2A2A !important;
 }
 
-/* --------------------------------------------------
-   2) ADD EXTRA TOP PADDING SO NOTHING GETS HIDDEN 
-      BEHIND STREAMLIT’S TOP BAR
-   -------------------------------------------------- */
+/* -------------------------------------------------------------------
+   2) ADD EXTRA TOP PADDING SO NOTHING GETS CLIPPED BEHIND STREAMLIT BAR
+   ------------------------------------------------------------------- */
 .block-container {
-    padding-top: 2.5rem !important;   /* increase if still clipped */
+    padding-top: 2.5rem !important;   /* bump this if you still see clipping */
     padding-bottom: 1rem !important;
 }
 
-/* --------------------------------------------------
-   3) HEADERS: match Flow’s “headline-3” look
-   -------------------------------------------------- */
+/* -------------------------------------------------------------------
+   3) HEADERS: match Flow’s “headline-3” look, but a tad smaller for mobile
+   ------------------------------------------------------------------- */
 h1 {
-    font-size: 2rem !important;      /* slightly smaller for mobile */
+    font-size: 2rem !important;      /* compact on mobile */
     font-weight: 700 !important;
     color: #2A2A2A !important;
     margin-bottom: 0.25rem !important;
 }
 
-/* Subheader text below main heading */
 .subheader {
-    font-size: 0.9rem !important;    /* compact for mobile */
+    font-size: 0.9rem !important;    /* compact under main heading */
     color: #4F4F4F !important;
     margin-top: -0.4rem !important;
     margin-bottom: 1rem !important;
 }
 
-/* --------------------------------------------------
-   4) SELECTBOX / RADIOBUTTON STYLING
-   (targeting BaseWeb classes that Streamlit uses internally)
-   -------------------------------------------------- */
+/* -------------------------------------------------------------------
+   4) SELECTBOX / RADIOBUTTON STYLING (Flow‐style boxes)
+   ------------------------------------------------------------------- */
 [data-baseweb="select"] > div > div {
     background-color: #F1F3F5 !important;
     color: #2A2A2A !important;
@@ -100,11 +139,11 @@ h1 {
     padding: 0.4rem 0.7rem !important;
 }
 [data-baseweb="select"] > div > div:focus-within {
-    border: 1px solid #E63946 !important;  /* Flow red accent */
+    border: 1px solid #E63946 !important;  /* Flow’s red on focus */
     box-shadow: none !important;
 }
 
-/* Horizontal radio buttons for weight selection */
+/* Horizontal radio button group */
 [data-baseweb="radio"] {
     display: flex;
     flex-wrap: wrap;
@@ -114,10 +153,10 @@ h1 {
     font-size: 0.9rem !important;
 }
 
-/* --------------------------------------------------
+/* -------------------------------------------------------------------
    5) DATAFRAME (st.dataframe) STYLING
-   -------------------------------------------------- */
-/* Column headers: light gray background, bold text, left-aligned */
+   ------------------------------------------------------------------- */
+/* Column headers: light gray bg, bold text, left-aligned, padded */
 .css-1d391kg th {
     background-color: #F1F3F5 !important;
     color: #2A2A2A !important;
@@ -126,14 +165,14 @@ h1 {
     padding: 0.5rem !important;
 }
 
-/* Hide the pandas index column entirely (class may change in newer Streamlit) */
+/* Hide the pandas index column entirely */
 .css-k1vhr4.e1tzin5v0 {
     display: none !important;
 }
 
-/* --------------------------------------------------
+/* -------------------------------------------------------------------
    6) COMPACT / MOBILE-FRIENDLY TWEAKS
-   -------------------------------------------------- */
+   ------------------------------------------------------------------- */
 .stDataFrame > label {
     font-size: 0.85rem !important;
 }

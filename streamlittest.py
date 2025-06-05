@@ -4,189 +4,117 @@ import streamlit as st
 import pandas as pd
 
 # -------------------------------------------------------
-# 1) PAGE CONFIG & GLOBAL CSS
+# 1) PAGE CONFIG & GLOBAL CSS (Uni Neue + compact/mobile tweaks)
 # -------------------------------------------------------
 st.set_page_config(
     page_title="Iowa Wrestling Leaderboard",
     layout="wide",
 )
 
-# -------------------------------------------------------------------
-# 1.A) INJECT UNI NEUE VIA @font-face (USE YOUR REAL FILENAMES)
-# -------------------------------------------------------------------
+# Inject Uni Neue @font-face (from the same folder) + FlowWrestling–style overrides + small media query
 _FLOW_CSS = """
 <style>
-/* -------------------------------------------------------------------
-   EMBED UNI NEUE (using your actual filenames under “OTF” and “TTF”)
-   -------------------------------------------------------------------
-   Make sure these font files live in the SAME DIRECTORY as this script:
-     • Fontfabric - UniNeueRegular.ttf
-     • Fontfabric - UniNeueRegular.otf
-     • Fontfabric - UniNeueSemiBold.ttf
-     • Fontfabric - UniNeueSemiBold.otf
-     • Fontfabric - UniNeueBold.ttf
-     • Fontfabric - UniNeueBold.otf
-     • (You can add Light, Thin, Black, etc., if you want)
-*/
-
-/* 400 / Regular */
+/* ============================================
+   A) LOAD UNI NEUE VIA @font-face (same folder)
+   ============================================ */
 @font-face {
-    font-family: 'Uni Neue';
-    src: 
-      url("Fontfabric - UniNeueRegular.woff2") format("woff2"),  
-      url("Fontfabric - UniNeueRegular.otf")  format("opentype"),
-      url("Fontfabric - UniNeueRegular.ttf")  format("truetype");
-    font-weight: 400;
-    font-style: normal;
+  font-family: 'Uni Neue';
+  /* Regular = weight 400 */
+  src: url("Fontfabric - UniNeueRegular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
 }
-
-/* 600 / SemiBold */
 @font-face {
-    font-family: 'Uni Neue';
-    src: 
-      url("Fontfabric - UniNeueSemiBold.woff2") format("woff2"),
-      url("Fontfabric - UniNeueSemiBold.otf")  format("opentype"),
-      url("Fontfabric - UniNeueSemiBold.ttf")  format("truetype");
-    font-weight: 600;
-    font-style: normal;
+  font-family: 'Uni Neue';
+  /* Bold = weight 700 */
+  src: url("Fontfabric - UniNeueBold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+/* (Optional: add more weights/italics if you want) */
+
+
+/* ======================================================
+   B) FORCE ALL STREAMLIT TEXT TO USE UNI NEUE (fallback=sans-serif)
+   ====================================================== */
+html,
+body,
+[class*="css"],
+.stApp {
+  font-family: 'Uni Neue', sans-serif !important;
+  color: #2A2A2A !important;
+  margin: 0;    /* remove default page margin */
+  padding: 0;
 }
 
-/* 700 / Bold */
-@font-face {
-    font-family: 'Uni Neue';
-    src: 
-      url("Fontfabric - UniNeueBold.woff2") format("woff2"),
-      url("Fontfabric - UniNeueBold.otf")  format("opentype"),
-      url("Fontfabric - UniNeueBold.ttf")  format("truetype");
-    font-weight: 700;
-    font-style: normal;
-}
-
-/* (OPTIONAL) 300 / Light */
-@font-face {
-    font-family: 'Uni Neue';
-    src: 
-      url("Fontfabric - UniNeueLight.woff2") format("woff2"),
-      url("Fontfabric - UniNeueLight.otf")  format("opentype"),
-      url("Fontfabric - UniNeueLight.ttf")  format("truetype");
-    font-weight: 300;
-    font-style: normal;
-}
-
-/* (OPTIONAL) 100 / Thin */
-@font-face {
-    font-family: 'Uni Neue';
-    src: 
-      url("Fontfabric - UniNeueThin.woff2") format("woff2"),
-      url("Fontfabric - UniNeueThin.otf")  format("opentype"),
-      url("Fontfabric - UniNeueThin.ttf")  format("truetype");
-    font-weight: 100;
-    font-style: normal;
-}
-
-/* (OPTIONAL) 900 / Black */
-@font-face {
-    font-family: 'Uni Neue';
-    src: 
-      url("Fontfabric - UniNeueBlack.woff2") format("woff2"),
-      url("Fontfabric - UniNeueBlack.otf")  format("opentype"),
-      url("Fontfabric - UniNeueBlack.ttf")  format("truetype");
-    font-weight: 900;
-    font-style: normal;
-}
-
-/* -------------------------------------------------------------------
-   FORCE EVERYTHING TO UNI NEUE (fallback to sans‐serif)
-   ------------------------------------------------------------------- */
-html, body, [class*="css"] {
-    font-family: 'Uni Neue', sans-serif !important;
-    color: #2A2A2A !important;
-}
-
-/* -------------------------------------------------------------------
-   2) ADD EXTRA TOP PADDING SO NOTHING GETS CLIPPED BEHIND STREAMLIT BAR
-   ------------------------------------------------------------------- */
-.block-container {
-    padding-top: 2.5rem !important;   /* bump this if you still see clipping */
-    padding-bottom: 1rem !important;
-}
-
-/* -------------------------------------------------------------------
-   3) HEADERS: match Flow’s “headline-3” look, but a tad smaller for mobile
-   ------------------------------------------------------------------- */
+/* =========================================================
+   C) FLOWWRESTLING-STYLE OVERRIDES (headings, selectboxes, etc.)
+   ========================================================= */
+/* Main header (trophy + “Iowa Wrestling Leaderboard”) */
 h1 {
-    font-size: 2rem !important;      /* compact on mobile */
-    font-weight: 700 !important;
-    color: #2A2A2A !important;
-    margin-bottom: 0.25rem !important;
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  color: #2A2A2A !important;
+  margin-bottom: 0.2rem;
 }
 
+/* Subheader text */
 .subheader {
-    font-size: 0.9rem !important;    /* compact under main heading */
-    color: #4F4F4F !important;
-    margin-top: -0.4rem !important;
-    margin-bottom: 1rem !important;
+  font-size: 1rem !important;
+  color: #4F4F4F !important;
+  margin-top: -0.5rem;
+  margin-bottom: 1.25rem;
 }
 
-/* -------------------------------------------------------------------
-   4) SELECTBOX / RADIOBUTTON STYLING (Flow‐style boxes)
-   ------------------------------------------------------------------- */
-[data-baseweb="select"] > div > div {
-    background-color: #F1F3F5 !important;
-    color: #2A2A2A !important;
-    border-radius: 0.5rem !important;
-    border: 1px solid #E0E0E0 !important;
-    padding: 0.4rem 0.7rem !important;
+/* Customize the Selectbox (filters) */
+[data-testid="stSelectbox"] .css-1wrcr25 {
+  background-color: #F1F3F5 !important;
+  color: #2A2A2A !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #E0E0E0 !important;
+  padding: 0.5rem 0.75rem !important;
 }
-[data-baseweb="select"] > div > div:focus-within {
-    border: 1px solid #E63946 !important;  /* Flow’s red on focus */
-    box-shadow: none !important;
+[data-testid="stSelectbox"] .css-1wrcr25:focus-within {
+  border: 1px solid #E63946 !important;
+  box-shadow: none !important;
 }
 
-/* Horizontal radio button group */
-[data-baseweb="radio"] {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-[data-baseweb="radio"] label {
-    font-size: 0.9rem !important;
-}
-
-/* -------------------------------------------------------------------
-   5) DATAFRAME (st.dataframe) STYLING
-   ------------------------------------------------------------------- */
-/* Column headers: light gray bg, bold text, left-aligned, padded */
+/* Style DataFrame column headers to match Flow’s look */
 .css-1d391kg th {
-    background-color: #F1F3F5 !important;
-    color: #2A2A2A !important;
-    font-weight: 600 !important;
-    text-align: left !important;
-    padding: 0.5rem !important;
+  background-color: #F1F3F5 !important;
+  color: #2A2A2A !important;
+  font-weight: 600 !important;
+  text-align: left !important;
 }
 
-/* Hide the pandas index column entirely */
+/* Remove the pandas index column entirely */
 .css-k1vhr4.e1tzin5v0 {
-    display: none !important;
+  display: none !important;
 }
 
-/* -------------------------------------------------------------------
-   6) COMPACT / MOBILE-FRIENDLY TWEAKS
-   ------------------------------------------------------------------- */
-.stDataFrame > label {
-    font-size: 0.85rem !important;
-}
-@media only screen and (max-width: 600px) {
-    .block-container {
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-    }
-    h1 {
-        font-size: 1.75rem !important;
-    }
-    .subheader {
-        font-size: 0.8rem !important;
-    }
+/* ============================================================
+   D) COMPACT + MOBILE FIXES (when viewport ≤ 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Shrink the main heading on tablets/phones */
+  h1 {
+    font-size: 2rem !important;
+    margin-bottom: 0.15rem;
+  }
+  /* Shrink subheader text */
+  .subheader {
+    font-size: 0.9rem !important;
+    margin-top: -0.4rem;
+    margin-bottom: 1rem;
+  }
+  /* Smaller padding for selectboxes on narrow screens */
+  [data-testid="stSelectbox"] .css-1wrcr25 {
+    padding: 0.3rem 0.5rem !important;
+  }
+  /* Reduce overall padding in the Streamlit container */
+  .stApp {
+    padding: 0.5rem !important;
+  }
 }
 </style>
 """
@@ -245,7 +173,7 @@ st.markdown(
     "<span style='font-weight:600;'>Classification (League)</span>, "
     "<span style='font-weight:600;'>Metro</span>, or "
     "<span style='font-weight:600;'>Grade</span>, "
-    "then toggle between the “Pound-for-Pound” tab and the “By Weight Class” tab below."
+    "then toggle between the “Pound‐for‐Pound” tab and the “By Weight Class” tab below."
     "</div>",
     unsafe_allow_html=True,
 )
@@ -347,7 +275,7 @@ with tab1:
             lambda x: f"{x:.2f}"
         )
 
-        # 4) Build display DataFrame with desired columns in the requested order:
+        # 4) Build display DataFrame with desired columns:
         #    P4P Rank → FloWrestling Score → Weight → Wrestler Name → Team Name → Grade
         display_p4p = df_p4p[[
             "P4P Rank",
@@ -425,6 +353,7 @@ with tab2:
                     "Classification",
                     "Metro",
                     "rank",        # original static rank
+                    # “leagues” was already dropped in load_data
                 ]
                 df_display = df_w.drop(columns=drop_cols, errors="ignore").copy()
 
@@ -478,6 +407,7 @@ with tab2:
                         "grade": "Grade",
                         "Tech_Falls": "Tech Falls",
                         "Major_Decisions": "Major Decisions",
+                        # “FloWrestling Score” is already correctly named
                     }
                 )
 
